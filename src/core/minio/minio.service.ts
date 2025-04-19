@@ -6,13 +6,9 @@ export class MinioService implements OnModuleInit {
   constructor(@Inject('MINIO') readonly minio: Client) {}
 
   async onModuleInit() {
-    const projects = await this.minio.bucketExists('projects')
-    if (!projects) {
-      await this.minio.makeBucket('projects')
-    }
-    const users = await this.minio.bucketExists('users')
-    if (!users) {
-      await this.minio.makeBucket('users')
+    const backups = await this.minio.bucketExists('backups')
+    if (!backups) {
+      await this.minio.makeBucket('backups')
     }
   }
 }

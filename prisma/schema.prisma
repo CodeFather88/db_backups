@@ -8,20 +8,32 @@ datasource db {
 }
 
 model Database {
-  id               String          @id @default(uuid())
-  name             String
-  type             DbType
-  host             String
-  port             Int
-  username         String
-  password         String
-  databaseName     String
-  backupInterval  BackupInterval
-  enabled          Boolean         @default(true)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  id             String         @id @default(uuid())
+  name           String
+  type           DbType
+  host           String
+  port           Int
+  username       String
+  password       String
+  databaseName   String
+  backupInterval BackupInterval
+  lastBackup     DateTime?
+  enabled        Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  backups        Backup[]
 
   @@map("databases")
+}
+
+model Backup {
+  id         String   @id @default(uuid())
+  databaseId String
+  database   Database @relation(fields: [databaseId], references: [id])
+  key        String
+  bucket     String
+  etag       String
+  createdAt  DateTime @default(now())
 }
 
 enum DbType {
@@ -30,8 +42,8 @@ enum DbType {
 }
 
 enum BackupInterval {
-  DAILY     // каждый день
-  HOURLY    // каждый час
-  WEEKLY    // раз в неделю
-  CUSTOM    // кастомная логика (например, через cron)
+  DAILY
+  HOURLY
+  WEEKLY
+  CUSTOM
 }
