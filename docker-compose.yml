@@ -1,0 +1,67 @@
+services:
+  minio:
+    image: quay.io/minio/minio
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
+    volumes:
+      - minio-data:/data
+    ports:
+      - ${MINIO_API}:9000
+      - ${MINIO_WEB}:9001
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  test_db:
+    image: postgres:latest
+    container_name: test_db
+    restart: unless-stopped
+    ports:
+      - ${DATABASE_PORT}:5432
+    environment:
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_USER=${DATABASE_USER}
+    volumes:
+      - data_db:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  server:
+    build: .
+    container_name: server
+    restart: always
+    networks:
+      - app_network
+
+    ports:
+      - ${APP_PORT}:3000
+    environment:
+      - APP_PORT=${APP_PORT}
+      - APP_HOST=${APP_HOST}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - JWT_TOKEN_VALID=${JWT_TOKEN_VALID}
+      - REFRESH_TOKEN_VALID_DAYS=${REFRESH_TOKEN_VALID_DAYS}
+
+    depends_on:
+      - test_db
+      - minio
+
+    volumes:
+      - server:/data/app
+
+volumes:
+  data_db:
+  server:
+  redis-data:
+    name: redis-data
+  minio-data:
+
+networks:
+  app_network:
+  minio-network:
+    driver: bridge
